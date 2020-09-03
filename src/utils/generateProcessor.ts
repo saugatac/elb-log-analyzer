@@ -47,6 +47,8 @@ export function generateProcessor({
 
   if (indexOfCountColumn > -1) {
     const counts: { [key: string]: number } = {}
+    const times: { [key: string]: number } = {}
+    const max: { [key: string]: number } = {}
     const tempCols = requestedColumns.slice(0)
 
     tempCols.splice(indexOfCountColumn, 1)
@@ -85,14 +87,36 @@ export function generateProcessor({
         }
 
         // stringifying columns serves as a multi-column group_by
-        const LINESTRING = JSON.stringify(parsedLineWithRequestedColumns)
-        counts[LINESTRING] = counts[LINESTRING] ? counts[LINESTRING] + 1 : 1
+        // const LINESTRING = JSON.stringify(parsedLineWithRequestedColumns)
+        // console.log(parsedLineWithRequestedColumns);
+        // console.log(parsedLineWithRequestedColumns[0]);
+        // console.log(parsedLineWithRequestedColumns[1]);
+        // console.log(parsedLineWithRequestedColumns[2]);
+        // console.log(parsedLineWithRequestedColumns[3]);
+        const indx1 = "[\""+parsedLineWithRequestedColumns[1]+"\",\""+parsedLineWithRequestedColumns[2]+"\",\""+parsedLineWithRequestedColumns[3]+"\"]";
+        counts[indx1] = counts[indx1] ? counts[indx1] + 1 : 1
+        const indx2 = ""+parsedLineWithRequestedColumns[1]+parsedLineWithRequestedColumns[2]+parsedLineWithRequestedColumns[3];
+        // console.log(indx2);
+        const tim = parsedLineWithRequestedColumns[0] as number;
+        times[indx2]=times[indx2]?
+        times[indx2]+1*(tim):(tim);
+        max[indx2]=max[indx2]?Math.max(max[indx2],tim):tim;
+
+          // console.log(times[indx2]);
       },
 
       getResults() {
         let q = chain(counts).map(function (countNumber, key) {
           const line = JSON.parse(key)
+          const timekey=line[0]+line[1]+line[2];
+          // console.log(timekey);
+          // console.log(timekey);
+          // console.log(indexOfCountColumn);
+          // console.log(countNumber);
           line.splice(indexOfCountColumn, 0, countNumber)
+          line.splice(1, 0, times[timekey])
+          line.splice(2, 0, times[timekey]/countNumber)
+          line.splice(3, 0, max[timekey])
           return line
         })
 
